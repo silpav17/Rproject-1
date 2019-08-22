@@ -1,2 +1,1 @@
-test
-second line to file
+third line
