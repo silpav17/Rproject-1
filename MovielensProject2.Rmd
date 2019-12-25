@@ -1,0 +1,280 @@
+---
+title: "movieLens Project"
+author: "Silpa Velagapudi"
+date: "November 30, 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+Downloading the data file
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+xfun::session_info('rmarkdown')
+tinytex::tinytex_root()
+```
+```{r download_data_file}
+################################
+# Create edx set, validation set
+################################
+
+# Note: this process could take a couple of minutes
+
+if(!require(tidyverse)) install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+if(!require(caret)) install.packages("caret", repos = "http://cran.us.r-project.org")
+if(!require(data.table)) install.packages("data.table", repos = "http://cran.us.r-project.org")
+
+# MovieLens 10M dataset:
+# https://grouplens.org/datasets/movielens/10m/
+# http://files.grouplens.org/datasets/movielens/ml-10m.zip
+
+dl <- tempfile()
+download.file("http://files.grouplens.org/datasets/movielens/ml-10m.zip", dl)
+
+ratings <- fread(text = gsub("::", "\t", readLines(unzip(dl, "ml-10M100K/ratings.dat"))),
+                 col.names = c("userId", "movieId", "rating", "timestamp"))
+
+movies <- str_split_fixed(readLines(unzip(dl, "ml-10M100K/movies.dat")), "\\::", 3)
+colnames(movies) <- c("movieId", "title", "genres")
+
+```
+Cleaning data
+```{r cleaning_data}
+movies <- as.data.frame(movies) %>% mutate(movieId = as.numeric(levels(movieId))[movieId],
+                                           title = as.character(title),
+                                           genres = as.character(genres))
+
+movielens <- left_join(ratings, movies, by = "movieId")
+
+# Validation set will be 10% of MovieLens data
+
+set.seed(1)#, sample.kind="Rounding")
+# if using R 3.5 or earlier, use `set.seed(1)` instead
+test_index <- createDataPartition(y = movielens$rating, times = 1, p = 0.1, list = FALSE)
+edx <- movielens[-test_index,]
+temp <- movielens[test_index,]
+
+# Make sure userId and movieId in validation set are also in edx set
+#Converting timestamp to Year, month, date, week, hour, minutes, sec for the validation set with different columns
+validation <- temp %>% 
+     semi_join(edx, by = "movieId") %>%
+     semi_join(edx, by = "userId") %>% mutate(n_week=format(weekdays(as.Date(format(as.POSIXct(timestamp,origin="1970-01-01"),"%Y-%m-%d"))))) %>% mutate(n_year=format(as.POSIXct(timestamp,origin="1970-01-01"),"%Y")) %>% mutate(n_month=format(as.POSIXct(timestamp,origin="1970-01-01"),"%m")) %>% mutate(n_day=format(as.POSIXct(timestamp,origin="1970-01-01"),"%d")) %>% 
+  mutate(n_hour=format(as.POSIXct(timestamp,origin="1970-01-01"),"%H")) %>% 
+  mutate(n_min=format(as.POSIXct(timestamp,origin="1970-01-01"),"%M")) %>% 
+  mutate(n_secs=format(as.POSIXct(timestamp,origin="1970-01-01"),"%OS"))
+
+# Add rows removed from validation set back into edx set
+
+removed <- anti_join(temp, validation)
+edx <- rbind(edx, removed)
+
+rm(dl, ratings, movies, test_index, temp, movielens, removed)
+```
+Using subset of edx data for analysing across different algorithms
+```{r pulling_subset_of_train_data}
+
+set.seed(1)
+#subsetting the data using filter with row greater than 25000
+edx_subset <- edx %>% group_by(movieId)  %>% 
+     filter(n()>25000) 
+
+#viewing the subset data
+head(edx_subset)
+
+
+
+```
+GLM method results:
+```{r glm_method}
+#using glm method for analysis
+train_glm <- train(rating ~  movieId , method = "glm", data = edx_subset)
+#created RMSE function for using it multiple times
+RMSE <- function(true_ratings, predicted_ratings){
+     sqrt(mean((true_ratings - predicted_ratings)^2))
+}
+#finding mean of the rating
+mu_hat <- mean(edx_subset$rating)
+#Finding RMSE result for the glm method results
+naive_rmse <- RMSE(validation$rating, mu_hat)
+#loading the RMSE result of glm method in table for future analysis
+rmse_results <- data_frame(method="glm",
+                                     RMSE = naive_rmse )
+#viewing the RMSE results
+rmse_results
+```
+Rpart method results:
+```{r rpart_method}
+#using rpart method for analysis
+train_rpart <- train(rating ~ ., method = "rpart", data = edx_subset, tuneGrid=data.frame(cp= seq(0, 0.05, 0.001)))
+#finding mean of the rating
+mu_hat <- mean(edx_subset$rating)
+#Finding RMSE result for the rpart method results
+rpart_rmse <- RMSE(validation$rating, mu_hat)
+#loading the RMSE result of glm method in table for future analysis
+rmse_results <- bind_rows(rmse_results,
+                          data_frame(method="rpart",  
+                                     RMSE = rpart_rmse ))
+#viewing the RMSE results
+rmse_results
+
+```
+RF method results:
+```{r rf_method}
+#using rf method for analysis
+train_rf <- train(rating ~ ., method = "rf", data = edx_subset, tuneGrid=data.frame(mtry= seq(1, 7, 1)),ntree=10)
+#finding mean of the rating
+mu_hat <- mean(edx_subset$rating)
+#Finding RMSE result for the rpart method results
+rf_rmse <- RMSE(validation$rating, mu_hat)
+#loading the RMSE result of glm method in table for future analysis
+rmse_results <- bind_rows(rmse_results,
+                          data_frame(method="rf",  
+                                     RMSE = rf_rmse ))
+#viewing the RMSE results
+rmse_results
+```
+Converting the timestamp into different columns for Year, Month, Date, Day, Hours, Minutes, Seconds. Reducing the number of records for pdf file generations. Results might not be the same as that of orirignal data.
+```{r adding_columns_train_set}
+#converting the timestamp to different columns of year, month, date, week, hour, minutes, seconds.
+ edx_updated <- edx  %>% mutate(n_year=format(as.POSIXct(timestamp,origin="1970-01-01"),"%Y")) %>% mutate(n_month=format(as.POSIXct(timestamp,origin="1970-01-01"),"%m")) %>% mutate(n_day=format(as.POSIXct(timestamp,origin="1970-01-01"),"%d")) %>% 
+  mutate(n_hour=format(as.POSIXct(timestamp,origin="1970-01-01"),"%H")) %>% 
+   mutate(n_week=format(weekdays(as.Date(format(as.POSIXct(timestamp,origin="1970-01-01"),"%Y-%m-%d"))))) %>%
+  
+  select(userId,movieId,rating,n_year,n_month,n_week,n_day,n_hour)
+head(edx_updated)
+```
+Finding the relation between the movie biased and rating
+```{r movie_rating}
+#calculating the overall mean of rating
+mu <- mean(edx_updated$rating)
+#checking the ratings and the movieId dependencies
+     edx_updated %>%
+          group_by(movieId) %>%
+          summarize(b_i = mean(rating - mu)) %>% slice(1:10)
+
+
+```
+Finding the relation between rating and user biased
+```{r user_rating}
+#checking the ratings and the userId dependencies
+     edx_updated %>%
+          group_by(userId) %>%
+          summarize(b_u = mean(rating - mu)) %>% slice(1:10)
+
+```
+Finding the relation between rating and year rating was provided
+```{r year_rating}
+#checking the ratings and the userId dependencies
+     edx_updated %>%
+          group_by(n_year) %>%
+          summarize(b_y = mean(rating - mu)) %>% slice(1:10)
+
+```
+Finding the best optimum value for the RMSE
+
+```{r mean_overall}
+#RMSE function for caalculating different lambdas.
+
+RMSE <- function(true_ratings, predicted_ratings){
+     sqrt(mean((true_ratings - predicted_ratings)^2))
+}
+#using different lambdas for our analysis
+lambdas <- seq(0, 10, 0.25)
+#l<-5.5
+rmses <- sapply(lambdas, function(l){
+  # finding mean of the rating
+mu <- mean(edx_updated$rating)
+# Finding the movie biased
+     b_i <- edx_updated %>%
+          group_by(movieId) %>%
+          summarize(b_i = sum(rating - mu)/(n()+l))
+     # Finding the user biased
+     b_u <- edx_updated %>% 
+          left_join(b_i, by="movieId") %>%
+          group_by(userId) %>%
+          summarize(b_u = sum(rating - b_i - mu)/(n()+l))
+     #Finding the year biased
+     b_y <- edx_updated %>% 
+          left_join(b_i, by="movieId") %>%
+          left_join(b_u,by="userId") %>% 
+          group_by(n_year) %>%
+          summarize(b_y = sum(rating - b_i - mu - b_u)/(n()+l))
+     #finding the month biased
+      b_m <- edx_updated %>% 
+          left_join(b_i, by="movieId") %>%
+          left_join(b_u,by="userId") %>% 
+          left_join(b_y,by="n_year") %>% group_by(n_month) %>%
+          summarize(b_m = sum(rating - b_i - mu - b_u - b_y)/(n()+l))
+      #Finding the Week biased
+      b_w <- edx_updated %>% 
+          left_join(b_i, by="movieId") %>%
+          left_join(b_u,by="userId") %>% 
+          left_join(b_y,by="n_year") %>%
+          left_join(b_m,by="n_month") %>%
+          group_by(n_week) %>%
+          summarize(b_w = sum(rating - b_i - mu - b_u - b_y - b_m)/(n()+l))
+      #Finding the date biased
+      b_d <- edx_updated %>% 
+          left_join(b_i, by="movieId") %>%
+          left_join(b_u,by="userId") %>% 
+          left_join(b_y,by="n_year") %>%
+          left_join(b_m,by="n_month") %>%
+          left_join(b_w,by="n_week") %>%
+          group_by(n_day) %>%
+          summarize(b_d = sum(rating - b_i - mu - b_u - b_y - b_m - b_w)/(n()+l))
+      #Finding the hour biased. 
+      b_h <- edx_updated %>% 
+          left_join(b_i, by="movieId") %>%
+          left_join(b_u,by="userId") %>% 
+          left_join(b_y,by="n_year") %>%
+          left_join(b_m,by="n_month") %>%
+          left_join(b_w,by="n_week") %>%
+          left_join(b_d, by="n_day") %>%
+          group_by(n_hour) %>%
+          summarize(b_h = sum(rating - b_i - mu - b_u - b_y - b_m - b_w - b_d)/(n()+l))
+      #Finding the predicted rating based on Year, Month, Movie id, User id, date, week
+     predicted_ratings <- 
+          validation %>% 
+          left_join(b_i, by = "movieId") %>%
+          left_join(b_u, by = "userId") %>%
+       left_join(b_y, by = "n_year") %>% 
+       left_join(b_m, by = "n_month") %>%
+       left_join(b_w, by = "n_week") %>%
+       left_join(b_d,by="n_day") %>%
+       left_join(b_h, by="n_hour") %>%
+      
+          mutate(pred = mu + b_i + b_u + b_y + b_m + b_w + b_d + b_h  ) %>%
+          .$pred
+# Finding the RMSE for the predicted rating
+  return(RMSE(predicted_ratings, validation$rating))
+  
+})
+
+ 
+
+
+
+```
+
+Plotting lambas and rmse values
+```{r qplot_of_lamda_values}
+#creating the plot with the lamdas and RMSEs
+qplot(lambdas, rmses) 
+```
+Finding minimum rmse value
+```{r min_lamda_value}
+#find the best lamda value for the RMSE values
+lambda <- lambdas[which.min(rmses)]
+#displaying min lambda value
+lambda
+```
+Adding the min RMSE value and showing all the results we have done so far
+```{r reporting_overall_effect}
+#Adding the table with the RMSE values which are the best
+rmse_results <- bind_rows(rmse_results,
+                          data_frame(method="Overall effect",  
+                                     RMSE = min(rmses)))
+
+#displaying all the RMSE values calculated so far
+rmse_results %>% knitr::kable()                                   
+```
+
