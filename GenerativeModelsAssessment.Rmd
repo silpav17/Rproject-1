@@ -1,0 +1,49 @@
+---
+title: "Generative Models Assessment"
+author: "Silpa Velagapudi"
+date: "October 10, 2019"
+output: html_document
+---
+```{r}
+library(dslabs)
+library(caret)
+library(tidyverse)
+library(dplyr)
+data("tissue_gene_expression")
+      
+set.seed(1993) #set.seed(1993, sample.kind="Rounding") if using R 3.6 or later
+
+
+```
+
+```{r}
+y <- tissue_gene_expression$y
+x <- tissue_gene_expression$x
+x <- x[, sample(ncol(x), 10)]
+#x
+
+train_lda <- train(x,y, method = "lda",preProcess = "center", data = tissue_gene_expression)
+#confusionMatrix(predict(train_lda, tissue_gene_expression), tissue_gene_expression)$overall["Accuracy"]
+#fit(x,y,method="lda")
+#confusionMatrix(predict(train_lda, tissue_gene_expression$x), tissue_gene_expression$y)$overall["Accuracy"]
+train_lda$results
+train_lda$finalModel$means
+#fit_glm
+#fit(x,y)
+train_set <-  as.data.frame(train_lda$finalModel$means)
+train_set
+
+#train_set %>%  ggplot(aes(cerebellum,colSums(train_lda$finalModel$means)) + geom_point()
+```
+
+```{r}
+train_qda <- train(x,y, method = "qda", data = tissue_gene_expression)
+train_qda$results
+train_set1 <- as.data.frame(train_qda$finalModel$means)
+train_set1
+```
+
+```{r}
+
+```
+

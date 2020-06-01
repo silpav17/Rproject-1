@@ -1,0 +1,46 @@
+---
+title: "Final_assessment"
+author: "Silpa Velagapudi"
+date: "August 28, 2019"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(pdftools)
+options(digits = 3)
+
+```
+
+```{r}
+fn <- system.file("extdata", "RD-Mortality-Report_2015-18-180531.pdf", package="dslabs")
+#system("cmd.exe", input = paste("start", fn))
+txt <- pdf_text(fn)
+txt
+
+
+```
+
+```{r}
+x <- str_split(txt,"\n")
+x
+
+```
+
+```{r}
+class(x)
+length(x)
+s <- x[[1]]
+#class(s)
+#s
+#length(s)
+s <- str_trim(s)
+#s
+header_index <- str_which(s,"2015")
+header_index
+header <- s[[2]]
+header
+str_split(header,"\\s+", simplify = FALSE)
+#s[header_index]
+```
+

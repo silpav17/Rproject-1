@@ -1,0 +1,61 @@
+---
+title: "Introduction to Regression Assessment"
+author: "Silpa Velagapudi"
+date: "August 31, 2019"
+output: html_document
+---
+
+```{r}
+set.seed(1989, sample.kind="Rounding")
+library(HistData)
+data("GaltonFamilies")
+options(digits = 3)
+```
+
+```{r}
+female_heights <- GaltonFamilies%>%     
+    filter(gender == "female") %>%     
+    group_by(family) %>%     
+    sample_n(1) %>%     
+    ungroup() %>%     
+    select(mother, childHeight) %>%     
+    rename(daughter = childHeight)
+```
+
+```{r}
+mean_m=mean(female_heights$mother)
+mean_d=mean(female_heights$daughter)
+sd_m=sd(female_heights$mother)
+sd_d=sd(female_heights$daughter)
+r=cor(female_heights$mother,female_heights$daughter)
+mean_m
+mean_d
+sd_m
+sd_d
+r
+```
+
+```{r}
+m_1 <- r*sd_d/(sd_m)
+m_1
+b_1 <- mean_d-(m_1*mean_m)
+b_1
+m_1^2*100
+m_2 <- r*sd_d/(sd_m+1)
+m_2
+```
+
+```{r}
+cond_avg <- female_heights %>% filter(round(mother)==60)  %>% summarize(avg=mean(daughter)) %>% pull(avg)
+cond_avg
+m_1*60+b_1
+```
+
+```{r}
+fit <- lm(mother~daughter,data=female_heights)
+fit
+female_heights
+y_hats <- predict(fit,se.fit=TRUE)
+y_hats
+```
+
