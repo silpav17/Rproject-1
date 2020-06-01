@@ -1,0 +1,30 @@
+---
+title: "Clustering Assessment"
+author: "Silpa Velagapudi"
+date: "November 27, 2019"
+output: html_document
+---
+
+```{r}
+library(dslabs)
+data("tissue_gene_expression")
+
+d <- dist(tissue_gene_expression$x - rowMeans(tissue_gene_expression$x))
+h <-hclust(d)
+
+
+plot(h, cex = 0.65, main = "", xlab = "")
+
+groups <- cutree(h, k = 7)
+groups
+#names(groups)[groups==4]
+```
+```{r}
+x_0 <- d
+x_0[is.na(x_0)] <- 0
+k <- kmeans(x_0, centers = 7)
+k
+groups <- k$cluster
+groups
+```
+

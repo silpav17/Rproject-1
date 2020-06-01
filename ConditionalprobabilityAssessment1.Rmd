@@ -1,0 +1,44 @@
+---
+title: "Conditional Probability Assessment"
+author: "Silpa Velagapudi"
+date: "September 7, 2019"
+output: html_document
+---
+```{r}
+set.seed(1)#,sample.kind = "Rounding")
+disease <- sample(c(0,1), size=1e6, replace=TRUE, prob=c(0.98,0.02))
+test <- rep(NA, 1e6)
+test[disease==0] <- sample(c(0,1), size=sum(disease==0), replace=TRUE, prob=c(0.90,0.10))
+test[disease==1] <- sample(c(0,1), size=sum(disease==1), replace=TRUE, prob=c(0.15,0.85))
+```
+
+```{r}
+die <- sum(test[disease==0])
+die_len <- length(test[disease==0])
+#hea <- sum(test[disease==1])
+#hea_len <- length(test[disease==1])
+
+die_neg <- sum(test[disease==1])
+die_len_neg <- length(test[disease==1])
+
+mean(disease[test==0])
+mean(disease[test==1]==0)
+```
+
+```{r}
+#test[disease==0]
+#test[disease==1]
+die <- sum(test[disease==0])
+die_len <- length(test[disease==0])
+hea <- sum(test[disease==1])
+hea_len <- length(test[disease==1])
+die/die_len
+hea/hea_len
+(die_len-die)/die_len
+(hea_len-hea)/hea_len
+hea_len/(hea_len+die_len)
+
+mean(test)
+#test
+```
+

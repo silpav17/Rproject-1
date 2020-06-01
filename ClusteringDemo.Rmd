@@ -1,0 +1,32 @@
+---
+title: "Clustering Demo"
+author: "Silpa Velagapudi"
+date: "November 27, 2019"
+output: html_document
+---
+
+```{r}
+data("movielens")
+top <- movielens %>%
+  group_by(movieId) %>%
+  summarize(n=n(), title = first(title)) %>%
+  top_n(50, n) %>%
+  pull(movieId)
+
+x <- movielens %>% 
+  filter(movieId %in% top) %>%
+  group_by(userId) %>%
+  filter(n() >= 25) %>%
+  ungroup() %>% 
+  select(title, userId, rating) %>%
+  spread(userId, rating)
+
+row_names <- str_remove(x$title, ": Episode") %>% str_trunc(20)
+x <- x[,-1] %>% as.matrix()
+x <- sweep(x, 2, colMeans(x, na.rm = TRUE))
+x
+x <- sweep(x, 1, rowMeans(x, na.rm = TRUE))
+x
+rownames(x) <- row_names
+```
+
