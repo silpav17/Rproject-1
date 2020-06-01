@@ -1,0 +1,105 @@
+---
+title: "Defect Analysis"
+author: "Silpa Velagapudi"
+date: "December 17, 2019"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+xfun::session_info('rmarkdown')
+tinytex::tinytex_root()
+```
+```{r}
+library(readr)
+library(dplyr)
+library(ggrepel)
+library(ggplot2)
+library(tidyr)
+
+```
+
+```{r}
+
+df <- read_csv("sampleDefects.csv")
+df
+```
+
+```{r}
+df <- df %>% separate(col=FUNTIONAL_GROUP, into=c("channel","feature"), sep="\\-", remove=FALSE)
+
+
+df
+```
+
+```{r}
+
+#df %>% filter(TYPE=="Jira" & DEFECT_CREATED_DATE_TIME>"31-MAY-19") %>% group_by(channel,feature) %>% ggplot(aes(feature,..count..)) + geom_bar()
+```
+
+```{r}
+dat_affected <- df %>% group_by(AFFECTED_VERSION, PRIORITY) %>%  mutate(cnt=n()) %>% select(AFFECTED_VERSION,PROJECT_NAME,FUNTIONAL_GROUP, PRIORITY,cnt) %>% arrange(PROJECT_NAME,PRIORITY)
+unique(dat_affected)
+```
+
+```{r}
+dat_FUNTIONAL_GROUP <- df %>% group_by(FUNTIONAL_GROUP, PRIORITY) %>%  mutate(cnt=n()) %>% select(FUNTIONAL_GROUP, PRIORITY,cnt) %>% arrange(FUNTIONAL_GROUP,PRIORITY)
+unique(dat_FUNTIONAL_GROUP)
+```
+
+```{r}
+dat_fixed_env <- df %>% group_by(DEFECT_FIX_VERSION, PRIORITY,ENVIRONMENT) %>%  mutate(cnt=n()) %>% select(DEFECT_FIX_VERSION,PROJECT_NAME,FUNTIONAL_GROUP,ENVIRONMENT, PRIORITY,cnt) %>% arrange(PROJECT_NAME,ENVIRONMENT,PRIORITY)
+unique(dat_fixed_env)
+```
+
+```{r}
+dat_env <- df %>% group_by(PRIORITY,ENVIRONMENT) %>%  mutate(cnt=n()) %>% select(PROJECT_NAME,FUNTIONAL_GROUP,ENVIRONMENT, PRIORITY,cnt) %>% arrange(PROJECT_NAME,ENVIRONMENT,PRIORITY)
+unique(dat_env)
+```
+
+```{r}
+dat_all <- df %>% group_by(DEFECT_FIX_VERSION,FUNTIONAL_GROUP,PRIORITY,ENVIRONMENT) %>%  mutate(cnt=n()) %>% filter(ENVIRONMENT="DINT") %>% select(DEFECT_FIX_VERSION,FUNTIONAL_GROUP,PRIORITY,ENVIRONMENT,cnt) %>% arrange(FUNTIONAL_GROUP,PRIORITY,ENVIRONMENT)
+unique(dat_all)
+```
+
+```{r}
+dat_effected <- df %>% group_by(AFFECTED_VERSION,FUNTIONAL_GROUP,ENVIRONMENT) %>%  mutate(cnt=n()) %>% select(AFFECTED_VERSION,FUNTIONAL_GROUP,ENVIRONMENT,cnt) %>% arrange(desc(FUNTIONAL_GROUP))
+unique(dat_effected)
+```
+
+```{r}
+dat_effect <- df %>% group_by(AFFECTED_VERSION,ENVIRONMENT) %>%  mutate(cnt=n()) %>% select(AFFECTED_VERSION,ENVIRONMENT,cnt) %>% arrange(desc(AFFECTED_VERSION))
+unique(dat_effect)
+```
+
+```{r}
+dat_feature <- df %>% group_by(AFFECTED_VERSION) %>% filter(FUNTIONAL_GROUP=="Activation & Fulfillment - Activate")   %>%  mutate(cnt=n()) %>% select(AFFECTED_VERSION,ENVIRONMENT,cnt) %>% arrange(desc(AFFECTED_VERSION))
+unique(dat_feature)
+```
+
+```{r}
+dat_all <- df %>% group_by(DEFECT_FIX_VERSION,FUNTIONAL_GROUP,ENVIRONMENT) %>%  mutate(cnt=n()) %>% select(DEFECT_FIX_VERSION,FUNTIONAL_GROUP,ENVIRONMENT,cnt) %>% arrange(FUNTIONAL_GROUP,ENVIRONMENT)
+unique(dat_all)
+```
+
+```{r}
+dat_all <- df %>% group_by(DEFECT_FIX_VERSION,FUNTIONAL_GROUP,ENVIRONMENT) %>% filter(FUNTIONAL_GROUP=="Activation & Fulfillment - Activate")  %>%  mutate(cnt=n()) %>% select(DEFECT_FIX_VERSION,FUNTIONAL_GROUP,ENVIRONMENT,cnt) %>% arrange(desc(DEFECT_FIX_VERSION))
+unique(dat_all)
+```
+
+```{r}
+dat_env <- df %>% group_by(PROJECT_NAME) %>%  mutate(cnt=n()) %>% filter(ENVIRONMENT=="ML-INT") %>% select(PROJECT_NAME,FUNTIONAL_GROUP, PRIORITY,cnt,AFFECTED_VERSION) %>% arrange(PROJECT_NAME,PRIORITY)
+unique(dat_env)
+```
+```{r}
+dat_env <- df %>% group_by(PROJECT_NAME) %>%  mutate(cnt=n()) %>% filter(ENVIRONMENT=="DINT") %>% select(PROJECT_NAME,FUNTIONAL_GROUP, PRIORITY,cnt) %>% arrange(PROJECT_NAME,PRIORITY)
+unique(dat_env)
+```
+
+```{r}
+dat_env <- df %>% group_by(PROJECT_NAME) %>%  mutate(cnt=n()) %>% filter(ENVIRONMENT=="Pre-Prod") %>% select(PROJECT_NAME,FUNTIONAL_GROUP, PRIORITY,cnt) %>% arrange(PROJECT_NAME,PRIORITY)
+unique(dat_env)
+```
+

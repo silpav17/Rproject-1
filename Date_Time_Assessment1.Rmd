@@ -1,0 +1,30 @@
+---
+title: "Date_Time_Assessment"
+author: "Silpa Velagapudi"
+date: "August 25, 2019"
+output: html_document
+---
+
+```{r}
+library(lubridate)
+library(dslabs)
+data(brexit_polls)
+head(brexit_polls)
+```
+
+```{r}
+brexit_polls  %>% filter(month(startdate)==4)
+```
+
+```{r}
+brexit_polls %>% filter(enddate >= round_date(ymd("2016-06-12"),week_start=7) & enddate <= round_date(ymd("2016-06-18"),week_start =1))
+```
+
+```{r}
+weekdays(ymd(max(brexit_polls$enddate)))
+
+max(brexit_polls$enddate)
+brexit_polls$enddate
+table(weekdays(brexit_polls$enddate))
+```
+

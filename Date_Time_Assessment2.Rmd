@@ -1,0 +1,20 @@
+---
+title: "Date_Time_Assessment2"
+author: "Silpa Velagapudi"
+date: "August 25, 2019"
+output: html_document
+---
+
+```{r}
+library(lubridate)
+library(dslabs)
+data(movielens)
+head(movielens)
+```
+
+```{r}
+movielens %>% mutate(dates=as_datetime(timestamp)) %>% mutate(years=year(dates),text=format(dates, "%H:%M:%S")) %>% group_by(years) %>% summarize(count=n())
+movielens %>% mutate(dates=as_datetime(timestamp)) %>% mutate(years=year(dates),text=format(dates, "%H")) %>% group_by(text) %>% summarize(count=n())
+
+```
+
