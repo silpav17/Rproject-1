@@ -1,0 +1,96 @@
+---
+title: "Digital Defects"
+author: "Silpa Velagapudi"
+date: "December 23, 2019"
+output: html_document
+---
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggrepel)
+library(ggplot2)
+library(tidyr)
+library(tm)
+library(stringr)
+
+```
+
+```{r}
+
+df <- read_csv("./Data_files/Digital.csv")
+df
+typeof(df)
+```
+```{r}
+
+df_updated <- df %>% filter(Status!="Cancelled" & Status!="Won't Do") 
+
+df_updated
+```
+
+```{r}
+
+ 
+dat_affected <- df_updated %>% filter(Environment=="Staging") %>% group_by(Affects_versions1, Priority) %>%  mutate(cnt=n()) %>% select(Affects_versions1,Functional_group, Priority,cnt) %>% arrange(Priority)
+unique(dat_affected)
+
+```
+
+```{r}
+dat_Failure_type <- df_updated %>% filter(Environment=="Staging") %>% group_by(Failure_Type, Priority) %>%  mutate(cnt=n()) %>% select(Failure_Type,Functional_group, Priority,cnt) %>% arrange(Priority,Failure_Type)
+unique(dat_Failure_type)
+```
+
+```{r}
+dat_source <- df_updated %>% filter(Environment=="Staging") %>% group_by(Test_Source,Failure_Type, Priority) %>%  mutate(cnt=n()) %>% select(Test_Source,Failure_Type,Functional_group, Priority,cnt) %>% arrange(Priority,Failure_Type)
+unique(dat_source)
+```
+
+```{r}
+dat_source_regression <- df_updated %>% filter(Environment=="Staging" & Test_Source=="Regression") %>% group_by(Failure_Type, Priority) %>%  mutate(cnt=n()) %>% select(Failure_Type,Functional_group, Priority,cnt) %>% arrange(Priority,Failure_Type)
+unique(dat_source_regression)
+```
+
+```{r}
+dat_affected_regression <- df_updated %>% filter(Environment=="Staging" & Test_Source=="Regression") %>% group_by(Affects_versions1, Priority) %>%  mutate(cnt=n()) %>% select(Affects_versions1,Priority,cnt,Labels1,Impacts) %>% arrange(Priority,Affects_versions1)
+unique(dat_affected_regression)
+
+dat_affected_impact <- df_updated %>% filter(Environment=="Staging" & Test_Source=="Regression") %>% group_by(Affects_versions1, Priority) %>%  mutate(cnt=n()) %>% select(Affects_versions1,Priority,cnt,Labels1,Impacts) %>% arrange(Impacts)
+unique(dat_affected_impact)
+
+dat_affected_label <- df_updated %>% filter(Environment=="Staging" & Test_Source=="Regression") %>% group_by(Affects_versions1, Priority) %>%  mutate(cnt=n()) %>% select(Affects_versions1,Priority,cnt,Labels1,Impacts) %>% arrange(Labels1)
+unique(dat_affected_label)
+
+dat_affected <- df_updated %>% filter(Environment=="Staging" & Test_Source=="Regression") %>% group_by(Affects_versions1, Priority) %>%  mutate(cnt=n()) %>% select(Affects_versions1,Priority,cnt,Labels1,Impacts) %>% arrange(desc(Affects_versions1))
+unique(dat_affected)
+
+```
+
+```{r}
+dat_affected_regression <- df_updated %>% filter(Environment=="Staging" & Test_Source=="Progression") %>% group_by(Affects_versions1, Priority) %>%  mutate(cnt=n()) %>% select(Affects_versions1,Priority,cnt,Labels1,Impacts) %>% arrange(Priority,Affects_versions1)
+unique(dat_affected_regression)
+
+dat_affected_impact <- df_updated %>% filter(Environment=="Staging" & Test_Source=="Progression") %>% group_by(Affects_versions1, Priority) %>%  mutate(cnt=n()) %>% select(Affects_versions1,Priority,cnt,Labels1,Impacts) %>% arrange(Impacts)
+unique(dat_affected_impact)
+
+dat_affected_label <- df_updated %>% filter(Environment=="Staging" & Test_Source=="Progression") %>% group_by(Affects_versions1, Priority) %>%  mutate(cnt=n()) %>% select(Affects_versions1,Priority,cnt,Labels1,Impacts) %>% arrange(Labels1)
+unique(dat_affected_label)
+
+dat_affected <- df_updated %>% filter(Environment=="Staging" & Test_Source=="Progression") %>% group_by(Affects_versions1, Priority) %>%  mutate(cnt=n()) %>% select(Affects_versions1,Priority,cnt,Labels1,Impacts) %>% arrange(desc(Affects_versions1))
+unique(dat_affected)
+
+```
+
+```{r}
+#df_updated %>%   count(Impacts) %>%     arrange(desc(n))
+#library(stringi)
+key_values <- c("ndel|byod|cart|eligible|xmpp|pdp|fcc|condev|mb|cost|balance|amount|backorder|shop|copy|estimated|customer experience|user experience|down payments|tablet|device|accessory|accessories|no major impact|visual|protection|buyflow|buyflow|no impact|bucket|cosmetic|buy flow")
+dsd <- df_updated %>% mutate(lower_impacts = tolower(Impacts)) %>% mutate(key_field=ifelse(str_detect(lower_impacts,key_values),str_extract(lower_impacts,key_values),"NA")) %>% select(lower_impacts,key_field)
+#ifelse(str_detect(upper_impacts, key_values),key_values,"NA")
+  head(dsd)
+write.csv(dsd, file = "./output_files/df.csv")
+esquisse::esquisser()
+
+```
+

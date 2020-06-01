@@ -1,0 +1,46 @@
+---
+title: "Distance Assessment 1"
+author: "Silpa Velagapudi"
+date: "September 21, 2019"
+output: html_document
+---
+```{r}
+library(dslabs)
+data("tissue_gene_expression")
+```
+
+```{r}
+dim(tissue_gene_expression$x)
+table(tissue_gene_expression$y)
+```
+
+
+
+
+```{r}
+d <- dist(tissue_gene_expression$x)
+d
+```
+
+```{r}
+as.matrix(d)[1,]
+```
+
+```{r}
+as.matrix(d)[39,]
+```
+
+```{r}
+as.matrix(d)[73,]
+```
+
+```{r}
+as.matrix(d)[c(1,2,39,40,73,74), c(1,2,39,40,73,74)]
+```
+
+```{r}
+image(as.matrix(d))
+```
+
+
+

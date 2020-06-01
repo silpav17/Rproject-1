@@ -1,0 +1,43 @@
+---
+title: "Distance assessment 3"
+author: "Silpa Velagapudi"
+date: "September 22, 2019"
+output: html_document
+---
+```{r}
+library(dplyr)
+library(dslabs)
+library(caret)
+data("tissue_gene_expression")
+set.seed(1,sample.kind="Rounding")
+```
+
+```{r}
+
+
+a <- as.data.frame(tissue_gene_expression)
+y <- a$y
+#class(tissue_gene_expression)
+test_index <- createDataPartition(y, times = 1, p = 0.5, list = FALSE)
+#class(test_index)
+train_set <- a %>% slice(-test_index)
+test_set <- a %>% slice(test_index)
+```
+
+```{r}
+ks <- seq(1, 11, 2)
+
+accuracy <- map_df(ks, function(k){
+    fit <- knn3(y ~ ., data = train_set, k = k)
+    y_hat <- predict(fit, train_set, type = "class")
+    cm_train <- confusionMatrix(data = y_hat, reference = train_set$y)
+    train_error <- cm_train$overall["Accuracy"]
+    y_hat <- predict(fit, test_set, type = "class")
+    cm_test <- confusionMatrix(data = y_hat, reference = test_set$y)
+    test_error <- cm_test$overall["Accuracy"]
+    tibble(train = train_error, test = test_error)
+    })
+
+accuracy
+```
+

@@ -1,0 +1,79 @@
+---
+title: "Distance Assessment 2"
+author: "Silpa Velagapudi"
+date: "September 22, 2019"
+output: html_document
+---
+
+```{r}
+library(dslabs)
+library(caret)
+set.seed(1)#,sample.kind="Rounding")
+data(heights)
+```
+
+```{r}
+y <- heights$height
+test_index <- createDataPartition(y, times = 1, p = 0.5, list = FALSE)
+train_set <- heights %>% slice(-test_index)
+test_set <- heights %>% slice(test_index)
+```
+
+```{r}
+
+k <- seq(1,101,3)
+
+s <- function(k){
+  set.seed(1)
+  print(k)
+  fit <- knn3(sex ~ ., data = train_set, k = k)
+  #print(fit)
+  y_hat <- predict(fit, train_set, type = "class")
+  #print(y_hat)
+  fmea <- F_meas(y_hat,reference = train_set$sex)
+  #print(fmea)
+   cm_train <- confusionMatrix(data = y_hat, reference = train_set$sex)
+  train_error <- cm_train$overall["Accuracy"]
+   y_hat <- predict(fit, test_set, type = "class")
+  cm_test <- confusionMatrix(data = y_hat, reference = test_set$sex)
+  test_error <- cm_test$overall["Accuracy"]
+  #tibble(train = train_error, test = test_error)
+  fmea_test <- F_meas(y_hat,reference = test_set$sex)
+  #print(fmea_test)
+ #f1_score(fmea,fmea_test)
+ (tibble(train = fmea, test = fmea_test))
+  #print(tibble(train = fmea, test = fmea_test))
+  #print(F_meas(y_hat,TRUE,reference = train_set$sex))
+}
+acd <- sapply(k,s)
+acd
+which.max(k)
+which.max(acd)
+#max(acd$test)
+```
+
+```{r}
+set.seed(1)
+fit <- knn3(sex ~ ., data = train_set, k = 7)
+  #print(fit)
+  y_hat <- predict(fit, train_set, type = "class")
+  #print(y_hat)
+  fmea <- F_meas(y_hat,reference = train_set$sex)
+  print(fmea)
+   cm_train <- confusionMatrix(data = y_hat, reference = train_set$sex)
+  train_error <- cm_train$overall["Accuracy"]
+   y_hat <- predict(fit, test_set, type = "class")
+  cm_test <- confusionMatrix(data = y_hat, reference = test_set$sex)
+  test_error <- cm_test$overall["Accuracy"]
+  #tibble(train = train_error, test = test_error)
+  fmea_test <- F_meas(y_hat,reference = test_set$sex)
+  print(fmea_test)
+ #f1_score(fmea,fmea_test)
+ (tibble(train = fmea, test = fmea_test))
+```
+
+```{r}
+
+
+```
+
