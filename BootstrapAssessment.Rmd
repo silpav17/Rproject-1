@@ -1,0 +1,40 @@
+---
+title: "kfold assessment 1 Q2"
+author: "Silpa Velagapudi"
+date: "September 22, 2019"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(dslabs)
+library(caret)
+set.seed(1995)
+if(!exists("mnist")) mnist <- read_mnist()
+set.seed(1995)
+indexes <- createResample(mnist_27$train$y, 10)
+```
+
+```{r}
+set.seed(1995)
+indexes$Resample10
+```
+
+```{r}
+a <- str_extract_all(indexes$Resample01,"3", simplify = TRUE)
+#a
+b <- str_count(indexes$Resample01,"3")
+#b
+cnt3 <- sum(b)
+cnt3
+sum(str_count(indexes$Resample01,"4"))
+sum(str_count(indexes$Resample01,"7"))
+```
+
+```{r}
+#indexes$Resample02
+cnt3 = sum(str_count(indexes$Resample01,"(3)")) + sum(str_count(indexes$Resample02,"(3)")) + sum(str_count(indexes$Resample03,"(3)")) + sum(str_count(indexes$Resample04,"(3)")) + sum(str_count(indexes$Resample05,"(3)")) + sum(str_count(indexes$Resample06,"(3)")) + sum(str_count(indexes$Resample07,"(3)")) + sum(str_count(indexes$Resample08,"(3)")) + sum(str_count(indexes$Resample09,"(3)")) + sum(str_count(indexes$Resample10,"(3)"))
+cnt3
+```
+
+
+

@@ -1,0 +1,54 @@
+---
+title: "Bootstrap Assessment 2"
+author: "Silpa Velagapudi"
+date: "September 24, 2019"
+output: html_document
+---
+```{r}
+B <- 10^4
+M <- replicate(B, {
+    y <- rnorm(100, 0, 1)
+    quantile(y, 0.75)
+})
+median(M)
+x_hat <- mean(M)
+x_hat
+(x_hat*(1-x_hat)/100)
+sd(M)
+```
+
+```{r}
+set.seed(1)
+ B <- 10^4
+
+
+funct <- function(a){
+   #set.seed(1)
+   y <- rnorm(100, 0, 1)
+set.seed(1)
+    
+    (quantile(y, 0.75))
+    
+}
+indexes <- createResample(y, B)
+test <- sapply(indexes, funct)
+mean(test)
+sd(test)
+median(test)
+#test
+mean(test) + 1.96 * sd(test) * c(-1, 1)
+
+
+
+
+B <- 10^4
+M_star <- replicate(B, {
+    y <- rnorm(100, 0, 1)
+  (y)
+    #quantile(M_star, .75)
+})
+quantile(M_star, .75)
+mean(M_star)
+sd(M_star)
+```
+

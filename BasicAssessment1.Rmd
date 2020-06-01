@@ -1,0 +1,101 @@
+---
+title: "Basic Assessment part 2"
+author: "Silpa Velagapudi"
+date: "September 7, 2019"
+output: html_document
+---
+
+```{r}
+library(caret)
+set.seed(2, sample.kind="Rounding")
+data(iris)
+iris <- iris[-which(iris$Species=='setosa'),]
+y <- iris$Species
+y
+```
+
+```{r}
+test_index <- createDataPartition(y,times=1,p=0.5,list=FALSE)
+test <- iris[test_index,]
+train <- iris[-test_index,]
+test
+train
+```
+
+```{r}
+
+
+cutoff <- seq(4.5,6.1,0.1)
+#cutoff
+accuracy <- map_dbl(cutoff, function(x){
+  y_hat <- ifelse(train$Petal.Length > x, "virginica", "versicolor") %>% 
+        factor(levels = levels(train$Species))
+  #y_hat
+mean(y_hat == train$Species)
+})
+max(accuracy)
+#accuracy
+best_cutoff <- cutoff[which.max(accuracy)]
+best_cutoff
+
+cutoff <- seq(4.5,6.1,0.1)
+#cutoff
+accuracy <- map_dbl(cutoff, function(x){
+  y_hat <- ifelse(test$Petal.Length > x, "virginica", "versicolor") %>% 
+        factor(levels = levels(test$Species))
+  #y_hat
+mean(y_hat == test$Species)
+})
+max(accuracy)
+#accuracy
+best_cutoff <- cutoff[which.max(accuracy)]
+best_cutoff
+
+
+```
+
+```{r}
+cutoff <- seq(2.5,3.2,0.1)
+#cutoff
+accuracy <- map_dbl(cutoff, function(x){
+  y_hat <- ifelse(train$Sepal.Width > x, "virginica", "versicolor") %>% 
+        factor(levels = levels(train$Species))
+  y_hat
+mean(y_hat == train$Species)
+})
+max(accuracy)
+#accuracy
+best_cutoff <- cutoff[which.max(accuracy)]
+best_cutoff
+```
+
+```{r}
+cutoff <- seq(6,7.4,0.1)
+#cutoff
+accuracy <- map_dbl(cutoff, function(x){
+  y_hat <- ifelse(train$Sepal.Length > x, "virginica", "versicolor") %>% 
+        factor(levels = levels(train$Species))
+  y_hat
+mean(y_hat == train$Species)
+})
+max(accuracy)
+#accuracy
+best_cutoff <- cutoff[which.max(accuracy)]
+best_cutoff
+```
+
+```{r}
+cutoff <- seq(1,2.5,0.1)
+#cutoff
+accuracy <- map_dbl(cutoff, function(x){
+  y_hat <- ifelse(train$Petal.Width > x, "virginica", "versicolor") %>% 
+        factor(levels = levels(train$Species))
+  y_hat
+mean(y_hat == train$Species)
+})
+max(accuracy)
+#accuracy
+best_cutoff <- cutoff[which.max(accuracy)]
+best_cutoff
+```
+
