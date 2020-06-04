@@ -1,0 +1,56 @@
+---
+title: "machine language assessment"
+author: "Silpa Velagapudi"
+date: "September 5, 2019"
+output: html_document
+---
+
+```{r}
+library(dslabs)
+library(dplyr)
+library(lubridate)
+
+data("reported_heights")
+
+
+```
+
+```{r}
+dat <- mutate(reported_heights, date_time = ymd_hms(time_stamp)) %>%
+  filter(date_time >= make_date(2016, 01, 25) & date_time < make_date(2016, 02, 1)) %>%
+  mutate(type = ifelse(day(date_time) == 25 & hour(date_time) == 8 & between(minute(date_time), 15, 30), "inclass","online")) %>%
+  select(sex, type)
+
+y <- factor(dat$sex, c("Female", "Male"))
+x <- dat$type
+#x
+#y
+female_online <- dat %>% filter(sex=="Female" & type=="online") 
+total_online <- dat %>% filter( type=="online") 
+female_class<- dat %>% filter(sex=="Female" & type=="inclass") 
+total_class<- dat %>% filter( type=="inclass") 
+nrow(female_online)/nrow(total_online)
+nrow(female_class)/nrow(total_class)
+mean(x=="online" & y=="Female")
+mean(x=="inclass" & y=="Female")
+```
+
+```{r}
+y_hat <- ifelse(x == "online", "Male", "Female") %>% 
+      factor(levels = levels(y))
+mean(y_hat==y)
+
+
+```
+
+```{r}
+table(predicted = y_hat, actual = y)
+#y %>% mutate(y_hat = y_hat) %>%   group_by(sex) %>%   summarize(accuracy = mean(y_hat == sex))
+#prev <- mean(y == "Female")
+table(y_hat, y)
+confusionMatrix(data = y_hat, reference = y)
+
+sensitivity(data = y_hat, reference = y)
+specificity(data = y_hat, reference = y)
+```
+

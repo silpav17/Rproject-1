@@ -1,0 +1,28 @@
+---
+title: "mnist"
+author: "Silpa Velagapudi"
+date: "September 4, 2019"
+output: html_document
+---
+```{r}
+library(dslabs)
+data(mnist)
+read_mnist()
+dat <- read_mnist()
+```
+
+```{r}
+
+nrow(dat$train$images)
+nrow(dat$train$labels)
+nrow(dat$test$images)
+nrow(dat$test$labels)
+nrow(dat)
+ncol(dat)
+ncol(dat$train$images)
+ncol(dat$train$labels)
+ncol(dat$test$images)
+ncol(dat$test$labels)
+ncol(read_mnist())
+```
+

@@ -1,0 +1,55 @@
+---
+title: "Logistic Regression Assessment"
+author: "Silpa Velagapudi"
+date: "September 8, 2019"
+output: html_document
+---
+```{r}
+#set.seed(2) #if you are using R 3.5 or earlier
+set.seed(2, sample.kind="Rounding") #if you are using R 3.6 or later
+make_data <- function(abc){
+
+  n <- 1000
+  p <- 0.5
+  mu_0 <- 0
+  mu_1 = abc
+  #print(mu_1)
+  sigma_0 <- 1
+  sigma_1 <- 1
+y <- rbinom(n, 1, p)
+f_0 <- rnorm(n, mu_0, sigma_0)
+f_1 <- rnorm(n, mu_1, sigma_1)
+x <- ifelse(y == 1, f_1, f_0)
+  
+test_index <- createDataPartition(y, times = 1, p = 0.5, list = FALSE)
+
+list(train = data.frame(x = x, y = as.factor(y)) %>% slice(-test_index),
+	test = data.frame(x = x, y = as.factor(y)) %>% slice(test_index))
+
+#glm_fit <- train_set %>% 
+ # mutate(y = as.numeric(sex == "Female")) %>%
+ # glm(y ~ x, data=., family = "binomial")
+print(x)
+print(y)
+
+#p_hat_logit <- predict(glm_fit, newdata = test_set, type = "response")
+#y_hat_logit <- ifelse(p_hat_logit > 0.5, "Female", "Male") %>% factor
+#confusionMatrix(y_hat_logit, test_set$x)$overall[["Accuracy"]]
+
+
+}
+#dat <- make_data(2)
+```
+
+```{r}
+dat$train %>% ggplot(aes(x, color = y)) + geom_density()
+mu_1 <- seq(0, 3, len=25)
+
+sapply(mu_1,make_data)
+
+
+
+
+
+```
+

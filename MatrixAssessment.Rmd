@@ -1,0 +1,32 @@
+---
+title: "Matrix Assessment"
+author: "Silpa Velagapudi"
+date: "November 25, 2019"
+output: html_document
+---
+
+```{r}
+#x <- matrix(rnorm(100*10), 100, 10)
+#x
+library(tidyverse)
+library(dslabs)
+if(!exists("mnist")) mnist <- read_mnist()
+
+class(mnist$train$images)
+x <- mnist$train$images 
+y <- mnist$train$labels
+
+#y <- matrix(1:15, 5, 3)
+#view(x >50 & x <205)
+
+row<-rowMeans(x,1)
+
+rowspec <- rowMeans(x >50 & x <205,1)
+row-rowspec
+```
+
+
+
+
+
+

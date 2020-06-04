@@ -1,0 +1,56 @@
+---
+title: "MNIST Assessment"
+author: "Silpa Velagapudi"
+date: "October 13, 2019"
+output: html_document
+---
+```{r}
+
+library(caret)
+library(dslabs)
+set.seed(1) # use `set.seed(1, sample.kind = "Rounding")` in R 3.6 or later
+data("mnist_27")
+models <- c("glm", "lda", "naive_bayes", "svmLinear", "knn", "gamLoess", "multinom", "qda", "rf", "adaboost")
+fits <- lapply(models, function(model){ 
+	print(model)
+	train(y ~ ., method = model, data = mnist_27$train)
+}) 
+    
+
+
+names(fits) <- models
+```
+
+```{r}
+pre <- sapply(fits, function(model){ 
+	print(model)
+	predict(model, data = mnist_27$test)
+}) 
+    
+
+```
+
+```{r}
+pre_matrix <- as.matrix(pre)
+
+nrow(pre_matrix)
+ncol(pre_matrix)
+length(mnist_27$test$y)
+```
+
+
+
+```{r}
+#pre_matrix
+prem <- sapply(fits, function(model){ 
+	print(model)
+	predict(model, data = mnist_27$train)
+}) 
+```
+```{r}
+acc <- 0.795638967
+ind <- acc > mean(pre == mnist_27$test$y)
+sum(ind)
+models[ind]
+```
+

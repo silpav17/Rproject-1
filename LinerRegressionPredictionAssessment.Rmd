@@ -1,0 +1,119 @@
+---
+title: "Liner Regression Assessment"
+author: "Silpa Velagapudi"
+date: "September 7, 2019"
+output: html_document
+---
+```{r}
+library(dslabs)
+library(dplyr)
+library(tidyverse)
+library(caret)
+#digits(3)
+set.seed(1)#, sample.kind="Rounding") 
+#n <- c(100, 500, 1000, 5000, 10000)
+#fad <- function(n){
+#n <- 100
+Sigma <- 9*matrix(c(1.0, 0.5, 0.5, 1.0), 2, 2)
+dat <- MASS::mvrnorm(n = 100, c(69, 69), Sigma) %>%
+      data.frame() %>% setNames(c("x", "y"))
+#}
+#sapply(n,fad)
+```
+
+```{r}
+set.seed(1)#, sample.kind="Rounding") 
+
+repfun <- function(a){
+ # fad(n)
+test_index <- createDataPartition(dat$y, times = 1, p = 0.5, list = FALSE)
+train_set <- dat %>% slice(-test_index)
+test_set <- dat %>% slice(test_index)
+fit <- lm(y ~ x, data = train_set)
+#print(fit$coefficients)
+y_hat <- predict(fit, test_set)
+sqrt(mean((y_hat - test_set$y)^2))
+#y_hat <- fit$coef[1] + fit$coef[2]*test_set$x
+#sqrt(mean((y_hat - test_set$y)^2))
+}
+set.seed(1)#, sample.kind="Rounding") 
+#digits(3)
+mean(replicate(5000,repfun(a)))
+
+
+
+```
+
+```{r}
+set.seed(1)#, sample.kind="Rounding") 
+repfuns <- function(a){
+test_index <- createDataPartition(dat$y, times = 1, p = 0.5, list = FALSE)
+train_set <- dat %>% slice(-test_index)
+test_set <- dat %>% slice(test_index)
+fit <- lm(y ~ x, data = train_set)
+y_hat <- predict(fit, test_set)
+sd(y_hat - test_set$y)
+}
+#sd(replicate(10000,repfun(a)))
+
+#n <- c(100, 500, 1000, 5000, 10000)
+
+#sapp <- function(c){
+ # sd(replicate(c,repfun(c)))
+#}
+#
+#tab <- sapply(n,sapp)
+#tab
+set.seed(1)#, sample.kind="Rounding") 
+#digits(3)
+sd(replicate(5000,repfuns(a)))
+```
+
+```{r}
+set.seed(1)#, sample.kind="Rounding") 
+Sigma <- matrix(c(1.0, 0.75, 0.75, 0.75, 1.0, 0.25, 0.75, 0.25, 1.0), 3, 3)
+dat <- MASS::mvrnorm(n = 100, c(0, 0, 0), Sigma) %>%
+	data.frame() %>% setNames(c("y", "x_1", "x_2"))
+set.seed(1)#, sample.kind="Rounding") 
+
+set.seed(1)
+test_index <- createDataPartition(dat$y, times = 1, p = 0.5, list = FALSE)
+train_set <- dat %>% slice(-test_index)
+test_set <- dat %>% slice(test_index)
+
+fit <- lm(y ~ x_1, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+fit <- lm(y ~ x_2, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+fit <- lm(y ~ x_1 + x_2, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+```
+
+```{r}
+set.seed(1)#, sample.kind="Rounding") 
+Sigma <- matrix(c(1.0, 0.75, 0.75, 0.75, 1.0, 0.95, 0.75, 0.95, 1.0), 3, 3)
+dat <- MASS::mvrnorm(n = 100, c(0, 0, 0), Sigma) %>%
+	data.frame() %>% setNames(c("y", "x_1", "x_2"))
+
+test_index <- createDataPartition(dat$y, times = 1, p = 0.5, list = FALSE)
+train_set <- dat %>% slice(-test_index)
+test_set <- dat %>% slice(test_index)
+
+fit <- lm(y ~ x_1, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+fit <- lm(y ~ x_2, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+
+fit <- lm(y ~ x_1 + x_2, data = train_set)
+y_hat <- predict(fit, newdata = test_set)
+sqrt(mean((y_hat-test_set$y)^2))
+```
+

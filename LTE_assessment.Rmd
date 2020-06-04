@@ -1,0 +1,64 @@
+---
+title: "LTE_assessment"
+author: "Silpa Velagapudi"
+date: "September 1, 2019"
+output: html_document
+---
+
+```{r}
+library(Lahman)
+
+```
+
+```{r}
+bat_02 <- Batting %>% filter(yearID == 2002) %>%
+    mutate(pa = AB + BB, singles = (H - X2B - X3B - HR)/pa, bb = BB/pa) %>%
+    filter(pa >= 100) %>%
+    select(playerID, singles, bb)
+```
+
+```{r}
+bat_01 <- Batting %>% filter(yearID %in% 1999:2001) %>% mutate(pa = AB + BB, singles = (H - X2B - X3B - HR)/pa, bb = BB/pa) %>%     filter(pa >= 100) %>% group_by(playerID) %>% summarize(mean_singles=mean(singles),mean_bb=mean(bb)) 
+sum(bat_01$mean_singles>0.2)
+bat_03 <- Batting %>% filter(yearID == 2002) %>%
+    mutate(pa = AB + BB, singles = (H - X2B - X3B - HR)/pa, bb = BB/pa) %>%
+    filter(pa >= 100) %>% group_by(playerID) %>% 
+    summarize(mean_singles=mean(singles),mean_bb=mean(bb)) 
+
+dat <- inner_join(bat_01,bat_03,"playerID") 
+cor(dat$mean_singles.x,dat$mean_singles.y)
+cor(dat$mean_bb.x,dat$mean_bb.y)
+```
+
+```{r}
+bat_04 <- Batting %>% filter(yearID %in% 1999:2001) %>% mutate(pa = AB + BB, singles = (H - X2B - X3B - HR)/pa, bb = BB/pa) %>%     filter(pa >= 100) %>% group_by(playerID) %>% mutate(means=mean(singles),meanb=mean(bb))
+bat_05 <- Batting %>% filter(yearID ==2002) %>% mutate(pa = AB + BB, singles = (H - X2B - X3B - HR)/pa, bb = BB/pa) %>%     filter(pa >= 100) %>% group_by(playerID) %>% mutate(means=mean(singles),meanb=mean(bb))
+dat <- inner_join(bat_04,bat_05,"playerID") 
+bat_04 %>% ggplot(aes(means,singles)) + geom_point()
+bat_04 %>% ggplot(aes(meanb,bb)) + geom_point()
+```
+
+```{r}
+#dat
+fit <- dat %>% lm(singles.x ~ means.y,data=.)
+fit$coef
+dat %>% lm(bb.x ~ meanb.y,data=.) %>% .$coef
+```
+
+```{r}
+get_slope <- function(data) {
+  fit <- lm(R ~ BB, data = data)
+  sum.fit <- summary(fit)
+
+  data.frame(slope = sum.fit$coefficients[2, "Estimate"], 
+             se = sum.fit$coefficients[2, "Std. Error"],
+             pvalue = sum.fit$coefficients[2, "Pr(>|t|)"])
+}
+```
+
+```{r}
+dat %>% 
+  group_by(HR) %>% 
+  do(get_slope)
+```
+

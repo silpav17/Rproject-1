@@ -1,0 +1,40 @@
+---
+title: "Cofounding Assessment"
+author: "Silpa Velagapudi"
+date: "September 2, 2019"
+output: html_document
+---
+```{r}
+library(dslabs)
+library(tidyverse)
+data("research_funding_rates")
+#data("admissions")
+
+```
+
+```{r}
+research_funding_rates
+#admissions
+
+```
+```{r}
+research_funding_rates %>% mutate(awards_not_men=applications_men-awards_men,awards_not_women=applications_women-awards_women) %>% summarize(awards_men=sum(awards_men),awards_women=sum(awards_women),awards_not_men=sum(awards_not_men),awards_not_women=sum(awards_not_women),percentage_men=sum(awards_men)/sum(applications_men)*100,percentage_women=sum(awards_women)/sum(applications_women)*100)
+```
+
+```{r}
+dat <- research_funding_rates %>% 
+      mutate(discipline = reorder(discipline, success_rates_total)) %>%
+      rename(success_total = success_rates_total,
+             success_men = success_rates_men,
+             success_women = success_rates_women) %>%
+      gather(key, value, -discipline) %>%
+      separate(key, c("type", "gender")) %>%
+      spread(type, value) %>%
+      filter(gender != "total")
+dat
+```
+
+```{r}
+dat %>% ggplot(aes(success,discipline,col=gender,size=applications)) + geom_point()
+```
+
