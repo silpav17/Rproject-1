@@ -1,0 +1,237 @@
+---
+title: "Titanic Assessment"
+author: "Silpa Velagapudi"
+date: "November 26, 2019"
+output: html_document
+---
+```{r}
+library(titanic)    # loads titanic_train data frame
+library(caret)
+library(tidyverse)
+library(rpart)
+library(rpart.plot)
+
+# 3 significant digits
+options(digits = 3)
+
+# clean the data - `titanic_train` is loaded with the titanic package
+titanic_clean <- titanic_train %>%
+    mutate(Survived = factor(Survived),
+           Embarked = factor(Embarked),
+           Age = ifelse(is.na(Age), median(Age, na.rm = TRUE), Age), # NA age to median age
+           FamilySize = SibSp + Parch + 1) %>%    # count family members
+    select(Survived,  Sex, Pclass, Age, Fare, SibSp, Parch, FamilySize, Embarked)
+```
+
+```{r}
+ set.seed(42)#, sample.kind = "Rounding")
+#nrow(titanic_clean)
+ test_index <- createDataPartition(titanic_clean$Survived, time = 1, p = .2, list = FALSE)
+ train_set <- titanic_clean %>% slice(-test_index)
+ test_set <- titanic_clean %>% slice(test_index)
+ 
+```
+
+Survival proportions, survival by sex and survival by class
+```{r}
+
+ #nrow(train_set)
+ #nrow(test_set)
+ 
+#sum(train_set$Survived==1)/ nrow(train_set)
+#nrow(train_set$)
+sum(train_set$Survived==1 & train_set$Sex=="female")/ sum(train_set$Sex=="female")
+sum(train_set$Survived==1 & train_set$Sex=="male")/ sum(train_set$Sex=="male")
+sum(train_set$Survived==1 & train_set$Sex=="female")
+ sum(train_set$Sex=="female")
+ sum(train_set$Survived==1 & train_set$Sex=="male")
+ sum(train_set$Sex=="male")
+ 
+ 
+
+```
+survival based in pclass
+
+```{r}
+train_set %>%
+    group_by(Pclass) %>%
+    summarize(Survived = mean(Survived == 1))
+
+```
+survival based on pclass and sex
+
+```{r}
+train_set %>%
+    group_by(Pclass,Sex) %>%
+    summarize(Survived = mean(Survived == 1))
+
+```
+
+We are guessing the outcomes
+```{r}
+set.seed(3)
+y_hat <- sample(c(0,1), length(test_index), replace = TRUE) %>%
+  factor(levels = levels(test_set$Survived))
+
+mean(y_hat == test_set$Survived)
+
+```
+accuracy using the sex
+```{r}
+#set.seed(3)
+y_hat <- sample(ifelse(test_set$Sex=="female",1,0), length(test_index), replace = FALSE) %>%
+  factor(levels = levels(test_set$Survived))
+
+y_hat1<-ifelse(test_set$Sex=="female",1,0) %>% factor(levels=levels(test_set$Survived))
+mean(y_hat1==test_set$Survived)
+
+mean(y_hat == test_set$Survived)
+#mean(y_hat == titanic_clean)
+
+pred = list()
+for (i in 1:length(test_set$Survived)) {
+        if (test_set[i,]$Sex == 'male') {
+            pred[i] = 0
+        }
+        else {
+           pred[i] = 1 
+        }
+}
+mean(as.numeric(as.character( test_set$Survived)) == pred)
+   y_hat<-  as.factor(levels(pred) )
+    cm <- confusionMatrix(y_hat1, reference = test_set$Survived)
+    cm$overall["Accuracy"]
+    cm$byClass[c("Sensitivity","Specificity", "Prevalence")]
+    F_meas(y_hat1, reference = test_set$Survived)
+```
+accuracy based on class
+```{r}
+pred = list()
+for (i in 1:length(test_set$Survived)) {
+        if (test_set[i,]$Pclass == 1) {
+            pred[i] = 1
+        }
+        else {
+           pred[i] = 0 
+        }
+    }
+    mean(as.numeric(as.character( test_set$Survived)) == pred)
+y_hat1<-ifelse(test_set$Pclass==1,1,0) %>% factor(levels=levels(test_set$Survived))
+mean(y_hat1==test_set$Survived)
+    cm <- confusionMatrix(y_hat1, reference = test_set$Survived)
+    cm$overall["Accuracy"]
+    cm$byClass[c("Sensitivity","Specificity", "Prevalence")]
+
+    F_meas(y_hat1, reference = test_set$Survived)
+```
+
+accuracy based on class and sex
+```{r}
+pred = list()
+for (i in 1:length(test_set$Survived)) {
+        if ((test_set[i,]$Pclass==1 || test_set[i,]$Pclass==2) && test_set[i,]$Sex=="female") {
+            pred[i] = 1
+        }
+        else {
+           pred[i] = 0 
+        }
+    }
+    mean(as.numeric(as.character( test_set$Survived)) == pred)
+y_hat1<-ifelse(((test_set$Pclass==1 | test_set$Pclass==2) & test_set$Sex=="female"),1,0) %>% factor(levels=levels(test_set$Survived))
+mean(y_hat1==test_set$Survived)
+    cm <- confusionMatrix(y_hat1, reference = test_set$Survived)
+    cm$overall["Accuracy"]
+    cm$byClass[c("Sensitivity","Specificity", "Prevalence")]
+    F_meas(y_hat1, reference = test_set$Survived)
+    
+```
+Train LDA
+```{r}
+set.seed(1)
+
+train_lda <- train(Survived ~ Fare, method = "lda", data = train_set)
+y_hat <- predict(train_lda, test_set)
+confusionMatrix(y_hat, test_set$Survived)$overall["Accuracy"]
+```
+Train QDA
+```{r}
+set.seed(1)
+
+train_qda <- train(Survived ~ Fare, method = "qda", data = train_set)
+y_hat <- predict(train_qda, test_set)
+confusionMatrix(y_hat, test_set$Survived)$overall["Accuracy"]
+```
+Train glm with age, sex+class+fare+age, with all
+```{r}
+set.seed(1)
+#Train with alm method for age
+train_glm_age <- train(Survived ~ Age, method = "glm", data = train_set)
+y_hat <- predict(train_glm_age, test_set)
+confusionMatrix(y_hat, test_set$Survived)$overall["Accuracy"]
+
+set.seed(1)
+#Train with alm method for sex+class+fare+age
+train_glm_some <- train(Survived ~ Sex+Pclass+Fare+Age, method = "glm", data = train_set)
+y_hat <- predict(train_glm_some, test_set)
+confusionMatrix(y_hat, test_set$Survived)$overall["Accuracy"]
+
+set.seed(1)
+#Train with alm method for all
+train_glm_all <- train(Survived ~ ., method = "glm", data = train_set)
+y_hat <- predict(train_glm_all, test_set)
+confusionMatrix(y_hat, test_set$Survived)$overall["Accuracy"]
+
+```
+knn with seq
+```{r}
+set.seed(6)
+#Train with alm method for age
+train_knn <- train(Survived ~ ., method = "knn", data = train_set, tuneGrid = data.frame(k = seq(3, 51, 2)))
+y_hat <- predict(train_knn, test_set)
+confusionMatrix(y_hat, test_set$Survived)$overall["Accuracy"]
+train_knn$bestTune
+ggplot(train_knn)
+```
+10-fold cross validation
+```{r}
+set.seed(8)
+#Train with alm method for age
+control <- trainControl(method="cv",number=10, p=0.9)
+#cvknn_fit <- train(Survived ~ ., method="knn", trControl=control, data=train_set)
+train_knn <- train(Survived ~ ., method = "knn",  trControl=control, data = train_set, tuneGrid = data.frame(k = seq(3, 51, 2)))
+y_hat <- predict(train_knn, test_set)
+confusionMatrix(y_hat, test_set$Survived)$overall["Accuracy"]
+train_knn$bestTune
+ggplot(train_knn)
+
+```
+Train with rpart method
+```{r}
+set.seed(10)
+#Train with alm method for age
+train_rpart <- train(Survived ~ ., method = "rpart", data = train_set, tuneGrid=data.frame(cp= seq(0, 0.05, 0.002)))
+y_hat <- predict(train_rpart, test_set)
+confusionMatrix(y_hat, test_set$Survived)$overall["Accuracy"]
+train_rpart$bestTune
+ggplot(train_rpart)
+
+#(train_rpart)
+```
+Decision tree
+```{r}
+set.seed(10)
+fit <- rpart(Survived~., data = train_set, method = 'class')#, cp= seq(0, 0.05, 0.002))
+rpart.plot(fit)
+```
+train with random forest method
+```{r}
+set.seed(14)
+#Train with random forest method 
+train_rf <- train(Survived ~ ., method = "rf", data = train_set, tuneGrid=data.frame(mtry= seq(1, 7, 1)),ntree=100)
+y_hat <- predict(train_rf, test_set)
+confusionMatrix(y_hat, test_set$Survived)$overall["Accuracy"]
+train_rf$bestTune
+ggplot(train_rf)
+varImp(train_rf)
+```
+

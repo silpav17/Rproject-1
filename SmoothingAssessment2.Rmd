@@ -1,0 +1,24 @@
+---
+title: "CaretAsessment2"
+author: "Silpa Velagapudi"
+date: "November 23, 2019"
+output: html_document
+---
+```{r}
+library(dslabs)
+library(tidyverse)
+library(broom)
+data("mnist_27")
+mnist_27$train %>% glm(y ~ x_2, family = "binomial", data = .) %>% tidy()
+#mnist_27$train %>%
+ # mutate(loess = predict(loess(y ~ x_2, data = mnist_27$train, span = 1/18))) %>%
+#fit <- loess(y ~ x_2, degree=1, span = 1/784, data=mnist_27$train)
+
+qplot(x_2, y, data = mnist_27$train) 
+mnist_27$train %>% 
+	mutate(y = ifelse(y=="7", 1, 0)) %>%
+	ggplot(aes(x_2, y)) + 
+	geom_smooth(method = "loess")
+
+
+```

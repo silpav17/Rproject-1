@@ -1,0 +1,71 @@
+---
+title: "Execution"
+author: "Silpa Velagapudi"
+date: "January 15, 2020"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 4
+    highlight: espresso
+    number_sections: true
+    latex_engine: xelatex
+    fig_width: 7
+    fig_height: 8.5
+    fig_caption: true
+fontsize: 13pt
+---
+
+\begin{enumerate}
+\item Introduction
+\item Data Extraction
+\item Creating key field values
+\item In-depth Analysis of the Data
+\item Conclusion
+\end{enumerate}
+
+
+\pagebreak
+
+1. **Introduction**:
+
+Analysing 1000 NGAX defects created. Trying to find what kind of defects are more frequent during the course of time. 
+
+
+2. **Data Extraction**:
+**Pre-requisites: Loading Packages and Libraries**
+
+First, we load all the necessary packages and libraries.
+
+```{r packages, echo=FALSE, warning=FALSE}
+if(!require(dplyr)) install.packages("dplyr", repos = "http://cran.us.r-project.org")
+if(!require(caret)) install.packages("caret", repos = "http://cran.us.r-project.org")
+if(!require(tidyverse)) install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+
+
+
+library(dplyr)
+library(tidyverse)
+
+```
+
+Downloaded the defects from the Jira Portal and created new file with the required fields and viewing the first 6 records of the file.
+
+```{r inputfilereading, echo=FALSE}
+
+df_exrp <- read_csv("./Data_files/Execution report.csv")
+head(df_exrp)
+```
+```{r executionreport, echo=FALSE}
+num <-df_exrp %>% filter(Version=="Staging" & ExecutionStatus %in% c("FAIL","BLOCKED")) %>% group_by(CycleName,ExecutionStatus) %>% summarize(count_key=n()) %>% select(CycleName,ExecutionStatus,count_key)
+head(num)
+num %>% ggplot(aes(CycleName,count_key)) +  geom_bar(stat="identity",fill="darkseagreen") + geom_text(aes(label = count_key), size = 3) +
+  coord_flip() + theme(axis.text.y = element_text(size = 8)) +
+  xlab("")
+```
+```{r}
+df_exrp_updated <- df_exrp %>% filter(Version=="Staging" & ExecutionStatus %in% c("FAIL","BLOCKED")) %>% arrange(`Issue Key`) %>% select(CycleName,`Issue Key`,Version,Component,Priority,`Executed On`, ExecutionStatus)
+dat <- unique.data.frame(df_exrp_updated)
+dat %>% group_by(`Issue Key`)  %>% summarize(count_key=n()) %>% arrange(desc(count_key))
+```
+
+

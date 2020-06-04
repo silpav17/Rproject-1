@@ -1,0 +1,36 @@
+---
+title: "Webscraping_assessment"
+author: "Silpa Velagapudi"
+date: "August 24, 2019"
+output: html_document
+---
+
+```{r}
+library(rvest)
+```
+
+```{r}
+url <- "https://web.archive.org/web/20181024132313/http://www.stevetheump.com/Payrolls.htm"
+h <- read_html(url)
+nodes <- html_nodes(h, "table")
+#sapply(nodes[1:4], html_table)
+sapply(nodes[19:21], html_table)
+html_table(nodes[[19]])
+html_table(nodes[[20]])
+html_table(nodes[[21]])
+
+
+```
+
+```{r}
+tab1 <- html_table(nodes[[10]]) %>% setNames(c("no","team","payroll","average")) %>% select(team,payroll,average)
+tab1 <- tab1[-1,]
+tab2 <- html_table(nodes[[19]]) %>% setNames(c("team","payroll","average")) %>% select(team,payroll,average)
+tab2 <- tab2[-1,]
+full_join(tab1,tab2,by="team")
+```
+
+
+```{r}
+
+```

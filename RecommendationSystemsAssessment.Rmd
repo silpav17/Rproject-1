@@ -1,0 +1,74 @@
+---
+title: "Recommendation Systems Assessment"
+author: "Silpa Velagapudi"
+date: "November 27, 2019"
+output: html_document
+---
+```{r}
+library(dslabs)
+library(dplyr)
+library(lubridate)
+library(tidyverse)
+data("movielens")
+```
+
+```{r}
+movielens  %>% group_by(year,movieId,title) %>% select(movieId, year, rating,title) %>% arrange(year,movieId,title) %>% summarize( n_rating=mean((rating)), l_rating=length(rating)) %>% filter(year > 1992, title %in% c("Shawshank Redemption, The", "Forrest Gump")) %>% arrange(desc(n_rating)) 
+    
+```
+
+```{r}
+dat <- movielens %>% filter(year > 1992, title %in% c("Forrest Gump")) %>% select(movieId, year, rating,title,timestamp) %>% mutate(n_year=format(as.POSIXct(timestamp,origin="1970-01-01"),"%Y")) 
+dat
+dat  %>% summarize( n_rating=mean(rating), l_rating=length(rating), avg_rating=(length(rating)/(2018 - unique(year) + 1)))
+
+
+
+```
+
+```{r}
+dat <- movielens %>% filter(year > 1992) %>% select(movieId, year, rating,title,timestamp) %>% mutate(n_year=format(as.POSIXct(timestamp,origin="1970-01-01"),"%Y")) 
+dat
+dat  %>% group_by(year,movieId,title) %>% summarize( n_rating=mean(rating), l_rating=length(rating), avg_rating=(l_rating)/(2018 - unique(year) + 1)) %>% ggplot(aes(l_rating,avg_rating))+ geom_point()
+```
+
+```{r}
+movielens   %>% filter(year > 1992, title %in% c( "Forrest Gump")) %>% select(year, rating, title) %>% group_by(year)  
+```
+
+
+
+```{r}
+movielens %>% group_by(movieId) %>% mutate( year > 1992) %>%
+	summarize(n = n(), year = as.character(first(year))) %>%
+	qplot(year, n, data = ., geom = "boxplot") +
+	coord_trans(y = "sqrt") +
+	theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+```{r}
+
+
+movielens <- mutate(movielens, date = as_datetime(timestamp))
+movielens
+movielens %>% mutate(date = round_date(date, unit = "week")) %>%
+	group_by(date) %>%
+	summarize(rating = mean(rating)) %>%
+	ggplot(aes(date, rating)) +
+	geom_point() +
+	geom_smooth()
+
+```
+
+```{r}
+movielens %>% 
+	group_by(genres) %>%
+	summarize(rating = mean(rating)) %>%
+	ggplot(aes(genres, rating)) +
+	geom_point() +
+	geom_smooth()
+
+
+movielens  %>% group_by(genres) %>% filter(length(rating)>1000) %>% summarize( n_rating=mean(rating), sd=sd(rating)) %>% arrange(n_rating)
+```
+

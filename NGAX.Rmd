@@ -1,0 +1,173 @@
+---
+title: "NGAX defect analysis"
+author: "Silpa Velagapudi"
+date: "December 27, 2019"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 4
+    highlight: espresso
+    number_sections: true
+    latex_engine: xelatex
+    fig_width: 7
+    fig_height: 8.5
+    fig_caption: true
+fontsize: 13pt
+---
+
+\begin{enumerate}
+\item Introduction
+\item Data Extraction
+\item Creating key field values
+\item In-depth Analysis of the Data
+\item Conclusion
+\end{enumerate}
+
+
+\pagebreak
+
+1. **Introduction**:
+
+Analysing 1000 NGAX defects created. Trying to find what kind of defects are more frequent during the course of time. 
+
+
+2. **Data Extraction**:
+**Pre-requisites: Loading Packages and Libraries**
+
+First, we load all the necessary packages and libraries.
+
+```{r packages, echo=FALSE, warning=FALSE}
+if(!require(dplyr)) install.packages("dplyr", repos = "http://cran.us.r-project.org")
+if(!require(caret)) install.packages("caret", repos = "http://cran.us.r-project.org")
+if(!require(tidyverse)) install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+
+
+
+library(dplyr)
+library(tidyverse)
+
+```
+
+Downloaded the defects from the Jira Portal and created new file with the required fields and viewing the first 6 records of the file.
+
+```{r inputfilereading, echo=FALSE}
+
+df_ngax <- read_csv("./Data_files/NGAX.csv")
+head(df_ngax)
+```
+3. **Creating key field values**
+
+Key_values is created based on the frequently used words from Impact field.
+
+Showing the first 6 records from the file after running the key values and writing the details to the file
+
+```{r keyvalues, echo=FALSE}
+key_values <- c("ndel|byo|cart|eligible|xmpp|pdp|fcc|condev|mb|cost|balance|amount|backorder|shop|copy|estimated|customer experience|user experience|down payments|tablet|accessory|accessories|no major impact|visual|protection|buy|customized page|no impact|bucket|cosmetic|warranty|exchange|upgrade|terminal return|return|session|print receipt|payment|ship flow|terms and conditions|case|statement|alignment|watch|plan|port|scan|cancel|deactivate|deactive|price|order details|font|usage|customer consent form|eligibility|rma|billing|promo|ui|order|one time fee|otp|current billing cycle|credit card|icon|past due|hotline|banner|credit|stock|carrier|suspend|voice mail|allowed|checkout|shipping|nickname|activate|activation|toast message|monthly|adp|OTP|ep1|ep2")
+df_ngax_updated <- df_ngax  %>% mutate(lower_impacts = tolower(Impacts)) %>% mutate(key_field=str_match(lower_impacts,key_values)) 
+head(df_ngax_updated)
+#write.csv(df_ngax_updated, file = "./output_files/ngax.csv")
+```
+\pagebreak
+4. **In-depth Analysis of the Data**:
+
+**Progression + Integration**
+Below bar graph shows the details of the Progression testing defects in Integration environment.
+
+```{r ProgressionInt, echo=FALSE}
+num <-df_ngax_updated %>% filter(Test_Source=="Progression" & Environment=="Integration") %>% group_by(key_field) %>% summarize(count_key=n()) %>% select(key_field,count_key)
+#head(num)
+num %>% ggplot(aes(key_field,count_key)) +  geom_bar(stat="identity",fill="darkseagreen") + geom_text(aes(label = count_key), size = 3) +
+  coord_flip() + theme(axis.text.y = element_text(size = 8)) +
+  xlab("")
+```
+
+We can see that we have few key words which are more common during testing like Promo, payment, device issues, cosmetic, BYO. As these are progression test cases we can expect they are related to the stories created.
+
+**Progression and Staging**
+Below bar graph shows the details of the Progression testing defects in staging environment.
+
+```{r progression_staging, echo=FALSE}
+num <-df_ngax_updated %>% filter(Test_Source=="Progression" & Environment=="Staging") %>% group_by(key_field) %>% summarize(count_key=n()) %>% select(key_field,count_key)
+#head(num)
+num %>% ggplot(aes(key_field,count_key)) +  geom_bar(stat="identity",fill="darkseagreen") + geom_text(aes(label = count_key), size = 3) +
+  coord_flip() + theme(axis.text.y = element_text(size = 8)) +
+  xlab("")
+```
+
+We can see that we have few key words which are more common during testing like Ordering issues, UI issues, device related issues, payment, XMPP and BYOD. As these are progression test cases we can expect they are related to the stories created.
+
+**Progression and Pre-Prod**
+Below bar graph shows the details of the Progression testing defects in staging environment.
+
+```{r progressionPreProd, echo=FALSE}
+num <-df_ngax_updated %>% filter(Test_Source=="Progression" & Environment=="Pre-Prod") %>% group_by(key_field) %>% summarize(count_key=n()) %>% select(key_field,count_key)
+#head(num)
+num %>% ggplot(aes(key_field,count_key)) +  geom_bar(stat="identity",fill="darkseagreen") + geom_text(aes(label = count_key), size = 3) +
+  coord_flip() + theme(axis.text.y = element_text(size = 8)) +
+  xlab("")
+```
+
+We can see that we have few key words which are more common during testing like RMA, cosmetic, device issue, scan flow and BYOD. We can clearly see that the issues found in pre-prod are same in staging for BYOD and device issues. Rest of the defects are different. From this we can say that defects found earlier are not getting repeated in higher environments.  
+
+**Progression for Integration, Staging and Pre-prod**
+Below graph provide details of the Progression defects in Integration, Staging and Pre-prod environments:
+
+```{r allenv, echo=FALSE}
+num <-df_ngax_updated %>% filter(Test_Source=="Progression" & Environment %in% c("Pre-Prod","Staging","Integration")) %>% group_by(key_field,Environment) %>% summarize(count_key=n()) %>% select(key_field,Environment,count_key)
+#head(num)
+num %>% ggplot(aes(key_field,count_key, color=Environment)) +  geom_line(stat="identity") + geom_text(aes(label = count_key), size = 2) +
+  coord_flip() + theme(axis.text.y = element_text(size = 8)) +
+  xlab("")
+#ggplot(data = data_gather, aes(x = value, fill = diagnosis, color = diagnosis)) +
+#  geom_density(alpha = 0.3, size = 1) +
+#  geom_rug() +
+#  scale_fill_brewer(palette = "Set1") +
+#  scale_color_brewer(palette = "Set1") +
+#  facet_wrap( ~ measure, scales = "free_y", ncol = 3)
+```
+
+**Regression for Integration**
+
+```{r RegressionInt, echo=FALSE}
+num <-df_ngax_updated %>% filter(Test_Source=="Regression" & Environment=="Integration") %>% group_by(key_field) %>% summarize(count_key=n()) %>% select(key_field,count_key)
+#head(num)
+num %>% ggplot(aes(key_field,count_key)) +  geom_bar(stat="identity",fill="darkseagreen") + geom_text(aes(label = count_key), size = 3) +
+  coord_flip() + theme(axis.text.y = element_text(size = 8)) +
+  xlab("")
+```
+**Regression for Staging**
+
+```{r RegressionStg, echo=FALSE}
+num <-df_ngax_updated %>% filter(Test_Source=="Regression" & Environment=="Staging") %>% group_by(key_field) %>% summarize(count_key=n()) %>% select(key_field,count_key)
+#head(num)
+num %>% ggplot(aes(key_field,count_key)) +  geom_bar(stat="identity",fill="darkseagreen") + geom_text(aes(label = count_key), size = 3) +
+  coord_flip() + theme(axis.text.y = element_text(size = 8)) +
+  xlab("")
+```
+**Regression for Pre-Prod**
+
+```{r RegressionPre, echo=FALSE}
+num <-df_ngax_updated %>% filter(Test_Source=="Regression" & Environment=="Pre-Prod") %>% group_by(key_field) %>% summarize(count_key=n()) %>% select(key_field,count_key)
+#head(num)
+num %>% ggplot(aes(key_field,count_key)) +  geom_bar(stat="identity",fill="darkseagreen") + geom_text(aes(label = count_key), size = 3) +
+  coord_flip() + theme(axis.text.y = element_text(size = 8)) +
+  xlab("")
+```
+
+**Regression for Integration, Staging and Pre-prod**
+
+Below graph provide details of the Progression defects in Integration, Staging and Pre-prod environments:
+
+```{r allenvRegression, echo=FALSE}
+num <-df_ngax_updated %>% filter(Test_Source=="Regression" & Environment %in% c("Pre-Prod","Staging","Integration")) %>% group_by(key_field,Environment) %>% summarize(count_key=n()) %>% select(key_field,Environment,count_key)
+#head(num)
+num %>% ggplot(aes(key_field,count_key, color=Environment)) +  geom_line(stat="identity") + geom_text(aes(label = count_key), size = 2) +
+  coord_flip() + theme(axis.text.y = element_text(size = 8)) +
+  xlab("")
+#ggplot(data = data_gather, aes(x = value, fill = diagnosis, color = diagnosis)) +
+#  geom_density(alpha = 0.3, size = 1) +
+#  geom_rug() +
+#  scale_fill_brewer(palette = "Set1") +
+#  scale_color_brewer(palette = "Set1") +
+#  facet_wrap( ~ measure, scales = "free_y", ncol = 3)
+```

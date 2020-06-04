@@ -1,0 +1,72 @@
+---
+title: "Regularization Assessment"
+author: "Silpa Velagapudi"
+date: "November 27, 2019"
+output: html_document
+---
+```{r}
+options(digits = 4)
+set.seed(1986) #for R 3.5 or earlier
+#if using R 3.6 or later, use `set.seed(1986, sample.kind="Rounding")` instead
+n <- round(2^rnorm(1000, 8, 1))
+
+```
+
+```{r}
+set.seed(1) #for R 3.5 or earlier
+#if using R 3.6 or later, use `set.seed(1, sample.kind="Rounding")` instead
+mu <- round(80 + 2*rt(1000, 5))
+range(mu)
+schools <- data.frame(id = paste("PS",1:1000),
+                      size = n,
+                      quality = mu,
+                      rank = rank(-mu))
+schools %>% top_n(10, quality) %>% arrange(desc(quality))
+schools
+```
+
+```{r}
+options(digits = 4)
+set.seed(1) #for R 3.5 or earlier
+#if using R 3.6 or later, use `set.seed(1, sample.kind="Rounding")` instead
+mu <- round(80 + 2*rt(1000, 5))
+
+scores <- sapply(1:nrow(schools), function(i){
+       scores <- rnorm(schools$size[i], schools$quality[i], 30)
+       scores
+})
+schools <- schools %>% mutate(score = sapply(scores, mean))
+
+schools %>% arrange(desc(score)) %>% top_n(-10, score) %>% summarize(a=median(size))
+
+schools %>% arrange(desc(score)) %>% summarize(a=median(size))
+
+schools %>% select(score,size)  %>% ggplot(aes((score),(size)))+ geom_point() 
+
+```
+
+```{r}
+schools %>% ggplot(aes(size, score)) +
+	geom_point(alpha = 0.5) +
+	geom_point(data = filter(schools, rank<=10), col = 2) 
+```
+
+```{r}
+overall <- mean(sapply(scores, mean))
+alpha <- 25
+overall
+
+alphas <- seq(10, 250, 1)
+     RMSE <- function(alpha){
+
+          temp <- schools %>% mutate(score_reg = overall + size*(score - overall)/(size + alpha))
+          sqrt(1/1000*((temp$score - temp$score_reg)^2))
+        }
+
+rmse <- sapply(alphas, RMSE)
+#qplot(alphas, rmse)
+
+qplot(rmse, bins = "5", color = I("black"))
+
+```
+

@@ -1,0 +1,103 @@
+---
+title: "US accident May 2019"
+author: "Silpa Velagapudi"
+date: "December 30, 2019"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    keep_tex: false
+        latex_engine: xelatex
+---
+#Introduction:
+Trying to analyse which states has more accidents, at what time they are happening, on which road. In future how many more can happen
+
+#Dataset details:
+This is a countrywide traffic accident dataset, which covers 49 states of the United States. The data is collected from February 2016 to March 2019, using several data providers, including two APIs which provide streaming traffic event data. These APIs broadcast traffic events captured by a variety of entities, such as the US and state departments of transportation, law enforcement agencies, traffic cameras, and traffic sensors within the road-networks. Currently, there are about 2.25 million accident records in this dataset. 
+
+## Method/Analysis
+The following 5-step process was utilized:
+
+\begin{enumerate}
+\item Data Extraction
+\item Data Cleaning
+\item In-depth Analysis of the Data
+\item Exploration of machine learning alternatives
+\item Application of a selected machine learning algorithm
+\end{enumerate}
+
+## Pre-requisites: Loading Packages and Libraries
+1. First, we load all the necessary packages and libraries.
+
+```{r packages, echo=FALSE, warning=FALSE}
+if(!require(dslabs)) install.packages("dslabs", repos = "http://cran.us.r-project.org")
+if(!require(dplyr)) install.packages("dplyr", repos = "http://cran.us.r-project.org")
+if(!require(tidyr)) install.packages("tidyr", repos = "http://cran.us.r-project.org")
+if(!require(stringr)) install.packages("stringr", repos = "http://cran.us.r-project.org")
+
+if(!require(tidyverse)) install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+if(!require(caret)) install.packages("caret", repos = "http://cran.us.r-project.org")
+if(!require(data.table)) install.packages("data.table", repos = "http://cran.us.r-project.org")
+
+
+library(dslabs)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(tidyverse)
+library(caret)
+library(data.table)
+
+```
+2. Using the file downloaded from https://www.kaggle.com/unsdsn/world-happiness
+## Data Extraction
+Data set contains 156 observations with 9 different columns as mentioned below
+\begin{enumerate}
+\item Overallrank
+\item Country
+\item Score
+\item Socialsupport
+\item Healthylifeexpectancy
+\item Freedomtomakelifechoices
+\item Generosity
+\item Perceptionsofcorruption
+\end{enumerate}
+```{r}
+world_happiness <- read_csv("./Data_files/2019.csv")
+head(world_happiness)
+```
+Below graph shows relation between rank and corruption. From graph we can see that, though there are countries with less than mean corruption are having high ranking and some of the countries are having high corruption are having less ranking also. There might be slight dependency on this but not totally.
+
+```{r}
+world_happiness  %>% ggplot(aes(Overallrank,Perceptionsofcorruption)) +  geom_point(stat="identity") + 
+  coord_flip() + geom_hline(aes(yintercept = mean(world_happiness$Perceptionsofcorruption)), col="red", lwd=2, lty=2) +
+  theme(axis.text.y = element_text(size = 10)) +
+  xlab("") 
+
+```
+Below graph shows relation between rank and freedom. From graph we can see that, though there are countries with less than mean freedom are having high ranking and some of the countries are having high freedom are also having high ranking also. There might be slight dependency on this but not totally.
+
+```{r}
+world_happiness  %>% ggplot(aes(Overallrank,Freedomtomakelifechoices)) +  geom_point(stat="identity") +
+  coord_flip() + geom_hline(aes(yintercept = mean(world_happiness$Freedomtomakelifechoices)), col="red", lwd=2, lty=2) +
+  theme(axis.text.y = element_text(size = 10)) +
+  xlab("")
+
+```
+Below graph shows relation between rank and GPA. From graph we can see that, we can clearly see that, when GPA per capita is greater than mean we see those countries are having less ranking and countries which are having righ ranking are having GPA per captia less than mean.
+```{r}
+world_happiness  %>% ggplot(aes(Overallrank,GDPpercapita)) +  geom_point(stat="identity") +
+  coord_flip() + geom_hline(aes(yintercept = mean(world_happiness$GDPpercapita)), col="red", lwd=2, lty=2) +
+  theme(axis.text.y = element_text(size = 10)) +
+  xlab("")
+
+```
+Below graph shows relation between rank and social support. From graph we can see that, we can clearly see that, when social support is greater than mean we see those countries are having good ranking and countries which are having righ ranking are having Social support less than mean.
+```{r}
+world_happiness  %>% ggplot(aes(Overallrank,Socialsupport)) +  geom_point(stat="identity") +
+  coord_flip() + geom_hline(aes(yintercept = mean(world_happiness$Socialsupport)), col="red", lwd=2, lty=2) +
+  theme(axis.text.y = element_text(size = 10)) +
+  xlab("")
+
+```

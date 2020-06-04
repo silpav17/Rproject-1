@@ -1,0 +1,218 @@
+---
+title: "World Hapiness"
+author: "Silpa Velagapudi"
+date: "December 30, 2019"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    latex_engine: xelatex
+---
+#Introduction:
+Analysing the data using different algorithms used as part of the course.
+
+The happiness scores and rankings use data from the Gallup World Poll. The scores are based on answers to the main life evaluation question asked in the poll. This question, known as the Cantril ladder, asks respondents to think of a ladder with the best possible life for them being a 10 and the worst possible life being a 0 and to rate their own current lives on that scale. The scores are from nationally representative samples for the years 2013-2016 and use the Gallup weights to make the estimates representative. The columns following the happiness score estimate the extent to which each of six factors – economic production, social support, life expectancy, freedom, absence of corruption, and generosity – contribute to making life evaluations higher in each country than they are in Dystopia, a hypothetical country that has values equal to the world’s lowest national averages for each of the six factors. They have no impact on the total score reported for each country, but they do explain why some countries rank higher than others.. 
+
+## Method/Analysis
+The following 5-step process was utilized:
+
+\begin{enumerate}
+\item Data Extraction
+\item In-depth Analysis of the Data
+\item Using clustering method for analysis
+\end{enumerate}
+
+## Pre-requisites: Loading Packages and Libraries
+1. First, we load all the necessary packages and libraries.
+
+```{r packages, echo=FALSE, warning=FALSE}
+if(!require(dplyr)) install.packages("dplyr", repos = "http://cran.us.r-project.org")
+if(!require(tidyr)) install.packages("tidyr", repos = "http://cran.us.r-project.org")
+if(!require(factoextra)) install.packages("factoextra", repos = "http://cran.us.r-project.org")
+if(!require(tidyverse)) install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+if(!require(cluster)) install.packages("cluster", repos = "http://cran.us.r-project.org")
+if(!require(caret)) install.packages("caret", repos = "http://cran.us.r-project.org")
+if(!require(plyr)) install.packages("plyr", repos = "http://cran.us.r-project.org")
+
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(factoextra)
+library(tidyverse)
+library(cluster)
+library(caret)
+```
+2. Using the file downloaded from https://www.kaggle.com/unsdsn/world-happiness
+## Data Extraction
+Data set contains 156 observations with 9 different columns as mentioned below
+\begin{enumerate}
+\item Overallrank
+\item Country
+\item Score
+\item GDPCapita
+\item Socialsupport
+\item Healthylifeexpectancy
+\item Freedomtomakelifechoices
+\item Generosity
+\item Perceptionsofcorruption
+\end{enumerate}
+```{r readingfile}
+world_happiness <- as.data.frame(read.csv("./Data_files/2019.csv", header=TRUE))
+                              
+head(world_happiness)
+
+``` 
+3. In-Depth analysis of the fields available in the data file.
+## In-depth Analysis of fields
+##Perceptionsofcorruption
+Below graph shows relation between rank and curruption. From graph we can see that, though there are countries with less than mean curruption are having high ranking and some of the countries are having high corruption are also having high ranking. There might be slight dependency on this but not totally.
+```{r Perceptionsofcorruption}
+world_happiness  %>% ggplot(aes(Overallrank,Perceptionsofcorruption)) +  geom_point(stat="identity") +
+  coord_flip() + geom_hline(aes(yintercept = mean(Perceptionsofcorruption)), col="red", lwd=2, lty=2) +
+  theme(axis.text.y = element_text(size = 10)) +
+  xlab("")
+
+```
+##Freedomtomakelifechoices
+Below graph shows relation between rank and freedom. From graph we can see that, though there are countries with less than mean freedom are having high ranking and some of the countries are having high freedom are also having high ranking. There might be slight dependency on this but not totally.
+```{r Freedomtomakelifechoices}
+world_happiness  %>% ggplot(aes(Overallrank,Freedomtomakelifechoices)) +  geom_point(stat="identity") +
+  coord_flip() + geom_hline(aes(yintercept = mean(Freedomtomakelifechoices)), col="red", lwd=2, lty=2) +
+  theme(axis.text.y = element_text(size = 10)) +
+  xlab("")
+
+```
+##GDPpercapita
+Below graph shows relation between rank and GPA. From graph we can see that, we can clearly see that, when GPA per capita is greater than mean we see those countries are having less ranking and countries which are having righ ranking are having GPA per captia less than mean.
+```{r GDPpercapita}
+world_happiness %>% ggplot(aes(Overallrank,GDPpercapita)) +  geom_point(stat="identity") +
+  coord_flip() + geom_hline(aes(yintercept = mean(GDPpercapita)), col="red", lwd=2, lty=2) +
+  theme(axis.text.y = element_text(size = 10)) +
+  xlab("")
+
+```
+##Socialsupport
+Below graph shows relation between rank and social support. From graph we can see that, we can clearly see that, when social support is greater than mean we see those countries are having good ranking and countries which are having high ranking are having Social support less than mean.
+```{r Socialsupport}
+world_happiness %>% ggplot(aes(Overallrank,Socialsupport)) +  geom_point(stat="identity") +
+  coord_flip() + geom_hline(aes(yintercept = mean(Socialsupport)), col="red", lwd=2, lty=2) +
+  theme(axis.text.y = element_text(size = 10)) +
+  xlab("")
+
+```
+##Healthylifeexpectancy
+Below graph shows relation between rank and Health. From graph we can see that, we can clearly see that, when Health is greater than mean we see those countries are having good ranking and countries which are having high ranking are having Health less than mean.
+```{r Healthylifeexpectancy}
+world_happiness %>% ggplot(aes(Overallrank,Healthylifeexpectancy)) +  geom_point(stat="identity") +
+  coord_flip() + geom_hline(aes(yintercept = mean(Healthylifeexpectancy)), col="red", lwd=2, lty=2) +
+  theme(axis.text.y = element_text(size = 10)) +
+  xlab("")
+
+```
+##Generosity
+Below graph shows relation between rank and Generosity. From graph we can see that, though there are countries with less than mean Generosity are having high ranking and some of the countries are having high Generosity are also having high ranking. There might be slight dependency on this but not totally.
+```{r Generosity}
+world_happiness %>% ggplot(aes(Overallrank,Generosity)) +  geom_point(stat="identity") +
+  coord_flip() + geom_hline(aes(yintercept = mean(Generosity)), col="red", lwd=2, lty=2) +
+  theme(axis.text.y = element_text(size = 10)) +
+  xlab("")
+
+```
+4. Clustering:
+##Clustering
+The purpose of clustering analysis is to identify patterns in data and create groups according to those patterns. Therefore, if two points have similar characteristics, that means they have the same pattern and consequently, they belong to the same group. By doing clustering analysis we should be able to check what features usually appear together and see what characterizes a group.
+
+The bigger is the K is choosed, the lower will be the variance within the groups in the clustering. If K is equal to the number of observations, then each point will be a group and the variance will be 0. It’s interesting to find a balance between the number of groups and their variance. A variance of a group means how different the members of the group are. The bigger is the variance, the bigger is the dissimilarity in a group.
+
+
+```{r Kmean}
+set.seed(1)
+input <- world_happiness %>% select(Score,Generosity, GDPpercapita, Socialsupport, Healthylifeexpectancy, Freedomtomakelifechoices, Perceptionsofcorruption)
+#checking the details using number of centers as 4
+kmeans(input, centers = 3, nstart = 20)
+```
+
+The function below plots a chart showing the “within sum of squares” (withinss) by the number of groups (K value) chosen for several executions of the algorithm. The within sum of squares is a metric that shows how dissimilar are the members of a group., the greater is the sum, the greater is the dissimilarity within a group.
+```{r wssplot}
+wssplot <- function(data, nc=15, seed=1){
+               wss <- (nrow(data)-1)*sum(apply(data,2,var))
+               for (i in 2:nc){
+                    set.seed(seed)
+                    wss[i] <- sum(kmeans(data, centers=i)$withinss)}
+                plot(1:nc, wss, type="b", xlab="Number of groups",
+                     ylab="Sum of squares within a group")}
+
+wssplot(input, nc = 25)
+```
+##K-Means
+By Analysing the chart from right to left, we can see that when the number of groups (K) reduces from 4 to 3 there is a big increase in the sum of squares. That means that when it passes from 4 to 3 groups there is a reduction in the clustering compactness. Our goal, however, is not to achieve compactness of 100% — for that, we would just take each observation as a group. The main purpose is to find a fair number of groups that could explain satisfactorily a considerable part of the data.
+
+Using 3 groups (K = 3) we had 68.8% of well-grouped data. Using 4 groups (K = 4) that value raised to 78.3%, which is a good value for us.
+```{r kmeans}
+set.seed(1)
+clustering <- kmeans(input, centers = 4, nstart = 20)
+clustering
+```
+Using silhouette coefficient (silhouette width) to evaluate the goodness of our clustering.
+```{r}
+sil <- silhouette(clustering$cluster, dist(input))
+fviz_silhouette(sil)
+
+```
+
+## Training and Test Datasets
+10% of the data is randomly selected as the **validation** dataset, the remainder (**edx**) to train the algorithm, making sure that userId and movieId in validation set are also in edx set.
+```{r datasets, echo=FALSE}
+#str(world_happiness)
+set.seed(1)
+world_data <- world_happiness %>% head(-16)
+test_index <- createDataPartition(y = world_data$Score, times = 1, p = 0.2, list = FALSE)
+edx <- world_data[-test_index,]
+validation <- world_data[test_index,]
+
+edx_final <- edx %>% mutate(Score=Score, GDPpercapita=GDPpercapita, Socialsupport=Socialsupport, Healthylifeexpectancy=Healthylifeexpectancy,Freedomtomakelifechoices=Freedomtomakelifechoices, Generosity=Generosity, Perceptionsofcorruption=Perceptionsofcorruption ) %>% select(Score, GDPpercapita, Socialsupport, Healthylifeexpectancy, Freedomtomakelifechoices, Generosity, Perceptionsofcorruption)
+validation_final <- validation[,3:9]
+
+```
+Check the structure and size of the edx dataset
+```{r structure-edx, echo=TRUE}
+str(edx_final)
+```
+Check the structure and size of the validation dataset
+```{r structure-validation, echo=TRUE}
+str(validation_final)
+```
+
+## Data Cleaning
+In order to provide â€œcleanâ€ data to the algorithms, we check for missing values and non-numeric values in the dataset.
+## Missing Values
+First, we check for any missing rating values:
+```{r missing, echo=TRUE}
+sum(is.na(edx_final$Score))
+```
+Check to see if there are any non-numeric rating values:
+```{r non-numeric, echo=TRUE}
+sum(is.nan(edx_final$Score))
+```
+
+**Observation:** There are no missing or non-numeric values for the rating variable.
+5. Methods and Analysis
+## Methods and Analysis
+
+i. GLM
+##Generalized Linear Model
+
+
+```{r glm, echo=TRUE}
+newdf <- data.frame(score=validation_final$Score)
+
+train_glm <- train(Score ~ GDPpercapita, method = "glm", data=edx_final)
+
+predict(train_glm,newdf)
+
+confusionMatrix(y_hat_glm, validation_final$Score)
+
+```
+
+
